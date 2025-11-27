@@ -140,7 +140,7 @@ def process_data(players_list, matches_list):
     return df_rank.sort_values(by='ELO', ascending=False), pd.DataFrame(history_records), processed_matches
 
 # --- INTERFACE ---
-st.title("🎾 Padel League (Cloud Version)")
+st.title("🔥Run vs Admin🔥 ")
 
 # Login
 with st.sidebar:
