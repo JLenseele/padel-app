@@ -70,10 +70,20 @@ def calculate_elo(rating_a, rating_b, actual_score, k=32):
     return rating_a + k * (actual_score - expected_score)
 
 def process_data(players_list, matches_list):
+    # --- CORRECTION : SI LISTE VIDE, RETOURNER VIDE ---
+    if not players_list:
+        # On retourne un DataFrame vide mais avec les bonnes colonnes pour éviter le crash
+        empty_df = pd.DataFrame(columns=['Joueur', 'Niveau', 'ELO', 'Matchs', 'V', 'N', 'D'])
+        return empty_df, pd.DataFrame(), []
+    # --------------------------------------------------
+
     # 1. Init Joueurs
     players = {}
     for p in players_list:
-        lvl = p['level'] if p['level'] else 'Intermédiaire'
+        # Sécurité si la colonne level est vide
+        lvl = p.get('level', 'Intermédiaire') 
+        if not lvl: lvl = 'Intermédiaire'
+            
         players[p['name']] = {
             'level': lvl,
             'elo': STARTING_ELO.get(lvl, 1200),
@@ -86,7 +96,6 @@ def process_data(players_list, matches_list):
         history_records.append({'Date': 'Début', 'Joueur': p_name, 'ELO': data['elo']})
 
     # 2. Rejouer Matchs
-    # On utilise enumerate pour garder une trace de l'index réel pour la suppression
     processed_matches = []
     
     for idx, m in enumerate(matches_list):
@@ -95,7 +104,7 @@ def process_data(players_list, matches_list):
         # Ignorer si joueurs inconnus
         if not all(p in players for p in t1 + t2): continue
         
-        # Sauvegarde pour affichage historique avec l'ID (index)
+        # Sauvegarde pour affichage
         m_display = m.copy()
         m_display['id'] = idx 
         processed_matches.append(m_display)
@@ -123,6 +132,7 @@ def process_data(players_list, matches_list):
         for p in active_players:
             history_records.append({'Date': m['date'], 'Joueur': p, 'ELO': players[p]['elo']})
 
+    # Création du DF final
     df_rank = pd.DataFrame.from_dict(players, orient='index').reset_index()
     df_rank.columns = ['Joueur', 'Niveau', 'ELO', 'Matchs', 'V', 'N', 'D']
     df_rank['ELO'] = df_rank['ELO'].round(0).astype(int)
